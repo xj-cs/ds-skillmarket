@@ -1,4 +1,4 @@
-# Skill 集市（dsh-skill-market）
+# Skill 集市（ds-skillmarket）
 
 DeepSeek Harness（DSH）插件：把 GitHub 上符合规范的 Agent Skills 聚合成一个集市界面——开箱即用的内置精选目录（23 个仓库 / 1196 个技能），星标、下载量一目了然；卡片一键安装，安装全程进度可视化；支持查看/卸载已装技能、本地新建与 URL 导入。
 
@@ -22,9 +22,10 @@ DeepSeek Harness（DSH）插件：把 GitHub 上符合规范的 Agent Skills 聚
 ### 安装（v1.0 任务化进度）
 
 - 卡片「安装」立即进入进度模式：**下载中**显示动画条 + 已下载字节 + 实时速率（指数滑动平均估算）；**解包中**动画条；**安装中**显示 `skillDone/skillTotal` 确定条与当前技能名。
-- 完成：卡片自动翻成「卸载」+「已安装」提示；失败：退回安装按钮，悬停可见原因，点击即重试。
-- 同仓库并发智能合并：安装进行中再点同仓库另一技能，自动并入同一次下载（不重复下载）；解包/安装阶段的新提交自动排队，借 tarball 缓存秒装。
-- 进度状态跨视图存活：翻页、切换集市↔已安装视图不丢。
+- 完成：卡片自动翻成「卸载」+「已安装」提示（含跳过数）；失败：退回安装按钮，失败原因按类型本地化展示，点击即重试。
+- 同仓库并发智能合并：安装进行中再点同仓库另一技能，自动并入同一次下载（不重复下载）；解包/安装阶段的新提交自动排队，借 tarball 缓存秒装；导入与安装共用单仓库单飞。
+- **同名保护**：同名技能来自其他来源（异仓 / 手动放入 / URL 导入）时跳过不覆盖，集市安装与 URL 导入同一规则。
+- 进度状态跨视图存活：翻页、切换集市↔已安装视图不丢；下载/安装中可一键取消任务。
 - 卸载两步确认；安装位置 `~/.dsh/skills/<技能名>/`（目录名 = SKILL.md frontmatter `name`，符合 DSH skills 规范），宿主新会话后加载。
 
 ### 已安装视图
@@ -34,7 +35,7 @@ DeepSeek Harness（DSH）插件：把 GitHub 上符合规范的 Agent Skills 聚
 ### 添加技能
 
 - **本地新建**：技能名 + 一句话简介（+ 可选正文）→ 生成规范 SKILL.md 落盘。
-- **URL 导入**：粘贴 GitHub 链接即可——Clone 链接（含 `.git`）整仓导入、`tree/分支/目录` 深链只装该目录、blob 页 SKILL.md 链接自动转 raw、raw/gist 直链单文件；同样任务化进度；同名技能同源覆盖更新、异源跳过；超限（128MB tarball）流式掐断并提示改用深链。
+- **URL 导入**：粘贴 GitHub 链接即可——Clone 链接（含 `.git`）整仓导入（**完整检索全部文件，含 `.agents/skills` 等隐藏目录中的技能**，仅排除 `node_modules`）、`tree/分支/目录` 深链只装该目录、blob 页 SKILL.md 链接自动转 raw、raw/gist 直链单文件；同样任务化进度、可取消；同名技能同源覆盖更新、异源跳过；超限（128MB tarball）流式掐断并提示改用深链；链接无技能 / 格式不受支持 / 目录下无技能等失败场景按类型给出本地化原因与建议。
 
 ### 多线路加速与零配额刷新（中国大陆实测驱动）
 
@@ -52,7 +53,7 @@ DeepSeek Harness（DSH）插件：把 GitHub 上符合规范的 Agent Skills 聚
 ### dsh web
 
 ```sh
-dsh plugin --profile web add dsh-skill-market
+dsh plugin --profile web add ds-skillmarket
 ```
 
 （发布 npm 后可用；从源码安装见下。）
@@ -65,10 +66,10 @@ dsh plugin --profile web add dsh-skill-market
 
 ```sh
 # web profile
-dsh plugin --profile web add "link:/path/to/dsh-skill-market"
+dsh plugin --profile web add "link:/path/to/ds-skillmarket"
 
-# 或手动：profile 的 package.json 加 "dsh-skill-market": "link:<绝对路径>"
-# 并把 "dsh-skill-market" 追加进 dsh.profile.bundles，然后 pnpm install
+# 或手动：profile 的 package.json 加 "ds-skillmarket": "link:<绝对路径>"
+# 并把 "ds-skillmarket" 追加进 dsh.profile.bundles，然后 pnpm install
 ```
 
 安装后重启宿主。三个入口：设置侧边栏「Skill 集市」分区（集市本体）、设置 → 内置插件页签（设置卡片）、主界面侧边栏行（开关默认关，在设置卡片打开）。
@@ -79,7 +80,7 @@ dsh plugin --profile web add "link:/path/to/dsh-skill-market"
 
 ```yaml
 - id: skill-market
-  name: 'dsh-skill-market'
+  name: 'ds-skillmarket'
   config:
     githubToken: ghp_xxx        # GitHub PAT：星标复核更稳；携带凭据的请求绝不经过加速前缀
     downloadProxy: https://gh-proxy.com  # 下载/API 加速前缀（operator 级，配置后界面输入锁定）
@@ -112,7 +113,7 @@ dsh plugin --profile web add "link:/path/to/dsh-skill-market"
 
 - **node half（`lib/index.js`）**：`export const name = 'skill-market'` + `apply(ctx, config)`；`ctx.inject(['webServer'])` 后经 `webServer.register` 挂同源 JSON API；全部副作用经 effect 登记可撤销；内置快照打底、多线路路由、任务化导入/安装、tarball 缓存、安装台账。
 - **browser half（`lib/client.js`）**：`window.__ModuleLoader__.load({ id, factory })` 信封；`inject = ['slots', 'locale', 'theme']`；渲染只用 `React.createElement` + 内联样式 + 内联 SVG，零外部资源。
-- `package.json` 的 `dsh` 字段声明插件身份（bundle patch / client platform）；`cordis.patch.yml` 顶层 `- insert: [{id: skill-market, name: 'dsh-skill-market'}]`。
+- `package.json` 的 `dsh` 字段声明插件身份（bundle patch / client platform）；`cordis.patch.yml` 顶层 `- insert: [{id: skill-market, name: 'ds-skillmarket'}]`。
 
 ## 开发
 
