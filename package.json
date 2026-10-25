@@ -1,6 +1,6 @@
 {
   "name": "ds-skillmarket",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Skill 集市 for DeepSeek Harness — 聚合 GitHub 上符合规范的 Agent Skills：星标/下载量一目了然，一键安装到 ~/.dsh/skills；支持查看已安装技能、本地新建与 URL 导入。Browse, install, create and import agent skills.",
   "type": "module",
   "main": "lib/index.js",
