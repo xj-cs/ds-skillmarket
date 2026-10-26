@@ -5,8 +5,8 @@ DeepSeek Harness（DSH）插件：把 GitHub 上符合规范的 Agent Skills 聚
 **v1.0.1** · 纯 JavaScript · 零构建 · 零运行时依赖（仅 Node 内置模块 + 全局 fetch）· 中英双语 · 深浅色主题
 
 | 集市 | 已安装 | 安装进度 |
-|---|---|---|
-| ![集市](docs/screenshots/market.png) | ![已安装](docs/screenshots/installed.png) | ![安装进度](docs/screenshots/install-progress.png) |
+| -- | --- | ---- |
+| 集市 | 已安装 | 安装进度 |
 
 ## 功能
 
