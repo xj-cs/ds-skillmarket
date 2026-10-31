@@ -1,0 +1,27 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  offline-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Syntax check (both halves)
+        shell: bash
+        run: node --check lib/index.js && node --check lib/client.js
+      - name: Offline test suites (no network, no real ~/.dsh)
+        shell: bash
+        run: |
+          set -e
+          node tests/test-adopt-13x.mjs
+          node tests/test-optimize-12x.mjs
+          node tests/test-import-11x.mjs
+          node tests/test-cancel-131.mjs
+          node tests/test-102-partial.mjs
+          node tests/test-ux-102.mjs
